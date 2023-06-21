@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { CameraController } from '../camera'
+import { Picker } from '../picker'
 
 interface Config {
   dom: HTMLCanvasElement
@@ -27,6 +28,8 @@ export class App {
 
   css3DRenderer: CSS3DRenderer
 
+  picker: Picker
+
   constructor(config: Config, inited?: Inited) {
     const { dom, url, background } = config
 
@@ -46,6 +49,7 @@ export class App {
     }
     this.loader.load(url, (gltf) => {
       this.scene.add(gltf.scene)
+      inited?.()
     })
 
     window.addEventListener('resize', this.onWindowResize.bind(this), false)
@@ -56,11 +60,13 @@ export class App {
     ambient.name = '环境光'
     this.scene.add(ambient)
 
-    this.render()
+    this.picker = new Picker(
+      this.scene,
+      this.camera.viewportCamera,
+      this.renderer
+    )
 
-    if (inited) {
-      inited()
-    }
+    this.render()
   }
 
   initRenderer(dom: HTMLElement) {
@@ -130,7 +136,6 @@ export class App {
 
     this.css2DRenderer.render(this.scene, this.camera.viewportCamera)
     this.css3DRenderer.render(this.scene, this.camera.viewportCamera)
-
     this.renderer.render(this.scene, this.camera.viewportCamera)
 
     requestAnimationFrame(this.render.bind(this))
