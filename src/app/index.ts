@@ -4,6 +4,7 @@ import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { CameraController } from '../camera'
 import { Picker } from '../picker'
+import { BaseObject } from '../object'
 
 interface Config {
   dom: HTMLCanvasElement
@@ -48,6 +49,7 @@ export class App {
       this.scene.background = new THREE.Color(background)
     }
     this.loader.load(url, (gltf) => {
+      console.log(gltf.scene)
       this.scene.add(gltf.scene)
       inited?.()
     })
@@ -99,6 +101,15 @@ export class App {
     this.scene = scene
 
     return this
+  }
+
+  // 查询 指定name 的对象集合
+  query(name: string) {
+    const objects: BaseObject[] = []
+    this.getObjectsByProperty('name', name).forEach((v) => {
+      objects.push(new BaseObject(v))
+    })
+    return objects
   }
 
   getObjectByName(name: string) {
