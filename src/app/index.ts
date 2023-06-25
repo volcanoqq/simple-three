@@ -107,7 +107,7 @@ export class App {
   query(name: string) {
     const objects: BaseObject[] = []
     this.getObjectsByProperty('name', name).forEach((v) => {
-      objects.push(new BaseObject(v))
+      objects.push(new BaseObject(v, this.scene))
     })
     return objects
   }
