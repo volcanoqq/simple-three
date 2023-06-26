@@ -59,64 +59,11 @@ export class BaseObject {
       }
     }
 
-    // 代理style对象
-    Object.defineProperty(this, 'style', {
-      set: (value: BaseStyle) => {
-        if (value instanceof Array || !(value instanceof Object)) {
-          throw new Error('style数据格式错误')
-        }
-        this.origin.userData.style = value // 修改后的数据保存在userData里面
-        this.changeStyle(value)
-      },
-      get: () => {
-        // 代理userData.style对象
-        return new Proxy(this.origin.userData.style, {
-          set: (target, prop, value) => {
-            switch (prop) {
-              case 'color':
-                this.changeColor(value as ColorRepresentation | null)
-                break
-              case 'opacity':
-                this.changeOpacity(value as number)
-                break
-              case 'outlineColor':
-                this.changeOutlineColor(value as ColorRepresentation | null)
-                break
-              case 'wireframe':
-                this.changeWireframe(value as boolean)
-                break
-
-              default:
-                break
-            }
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            // eslint-disable-next-line no-param-reassign
-            target[prop] = value
-            return true
-          },
-          get: (target, prop) => {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            return target[prop]
-          }
-        })
-      }
-    })
-
     this.update = () => {
       TWEEN.update()
       requestAnimationFrame(this.update)
     }
     this.update()
-  }
-
-  private changeStyle(style: BaseStyle) {
-    const { color, opacity, outlineColor, wireframe } = style
-    this.changeColor(color as ColorRepresentation | null)
-    this.changeOpacity(opacity as number)
-    this.changeOutlineColor(outlineColor as ColorRepresentation | null)
-    this.changeWireframe(wireframe as boolean)
   }
 
   /**
@@ -147,7 +94,9 @@ export class BaseObject {
     update?: () => void
     stop?: () => void
     complete?: () => void
-  }) {
+  }): TWEEN.Tween<{
+    distance: number
+  }> {
     const {
       path,
       closed = false,
@@ -219,11 +168,6 @@ export class BaseObject {
     console.log(this)
   }
 
-  setScale(scale: number[]) {
-    console.log(this)
-    console.log(scale)
-  }
-
   /**
    *
    * @description 修改BaseObject的颜色,颜色可填写十六进制颜色值或 RGB 字符串。设置为 null,可取消勾边颜色
@@ -236,7 +180,7 @@ export class BaseObject {
         const meshMaterial = (object as THREE.Mesh)
           .material as THREE.MeshBasicMaterial
 
-        if (color === null) {
+        if (color === null || color === undefined) {
           meshMaterial.color.set(this.origin.userData.colorMap.get(object.uuid))
         } else {
           meshMaterial.color.set(color)
@@ -291,5 +235,61 @@ export class BaseObject {
         meshMaterial.wireframe = wireframe
       }
     })
+  }
+
+  // 返回Proxy 代理this.origin.userData.style
+  get style(): BaseStyle {
+    return new Proxy(this.origin.userData.style, {
+      set: (target, prop, value) => {
+        switch (prop) {
+          case 'color':
+            this.changeColor(value as ColorRepresentation | null)
+            break
+          case 'opacity':
+            this.changeOpacity(value as number)
+            break
+          case 'outlineColor':
+            this.changeOutlineColor(value as ColorRepresentation | null)
+            break
+          case 'wireframe':
+            this.changeWireframe(value as boolean)
+            break
+
+          default:
+            break
+        }
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        // eslint-disable-next-line no-param-reassign
+        target[prop] = value
+        return true
+      },
+      get: (target, prop) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return target[prop]
+      }
+    })
+  }
+
+  set style(value: BaseStyle) {
+    if (value instanceof Array || !(value instanceof Object)) {
+      throw new Error('style数据格式错误')
+    }
+    this.origin.userData.style = value // 修改后的数据保存在userData里面
+    const { color, opacity, outlineColor, wireframe } = value
+    this.changeColor(color as ColorRepresentation | null)
+    this.changeOpacity(opacity as number)
+    this.changeOutlineColor(outlineColor as ColorRepresentation | null)
+    this.changeWireframe(wireframe as boolean)
+  }
+
+  get scale(): number[] {
+    const { x, y, z } = this.origin.scale
+    return [x, y, z]
+  }
+
+  set scale(value: number[]) {
+    this.origin.scale.set(value[0], value[1], value[2])
   }
 }
