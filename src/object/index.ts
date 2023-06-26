@@ -16,7 +16,7 @@ import * as TWEEN from '@tweenjs/tween.js'
 interface BaseStyle {
   color?: ColorRepresentation | null // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
   opacity?: number // 设置/获取物体不透明度，0 为全透明，1 为不透明。
-  outlineColor?: string | number // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
+  outlineColor?: ColorRepresentation | null // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
   wireframe?: boolean // 开启/关闭线框模式。
 }
 export class BaseObject {
@@ -54,7 +54,7 @@ export class BaseObject {
       this.origin.userData.style = {
         color: null, // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
         opacity: 1, // 设置/获取物体不透明度，0 为全透明，1 为不透明。
-        outlineColor: '#ffffff', // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
+        outlineColor: null, // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
         wireframe: false // 开启/关闭线框模式。
       }
     }
@@ -66,7 +66,7 @@ export class BaseObject {
           throw new Error('style数据格式错误')
         }
         this.origin.userData.style = value // 修改后的数据保存在userData里面
-        this.styleInit(value)
+        this.changeStyle(value)
       },
       get: () => {
         // 代理userData.style对象
@@ -76,13 +76,11 @@ export class BaseObject {
               case 'color':
                 this.changeColor(value as ColorRepresentation | null)
                 break
-
               case 'opacity':
                 this.changeOpacity(value as number)
                 break
-
               case 'outlineColor':
-                this.changeOutlineColor(value as string | number)
+                this.changeOutlineColor(value as ColorRepresentation | null)
                 break
               case 'wireframe':
                 this.changeWireframe(value as boolean)
@@ -113,20 +111,12 @@ export class BaseObject {
     this.update()
   }
 
-  private styleInit(style: BaseStyle) {
+  private changeStyle(style: BaseStyle) {
     const { color, opacity, outlineColor, wireframe } = style
-    if (color) {
-      this.changeColor(color as ColorRepresentation | null)
-    }
-    if (opacity === 0 || opacity) {
-      this.changeOpacity(opacity as number)
-    }
-    if (outlineColor) {
-      this.changeOutlineColor(outlineColor as string | number)
-    }
-    if (wireframe) {
-      this.changeWireframe(wireframe as boolean)
-    }
+    this.changeColor(color as ColorRepresentation | null)
+    this.changeOpacity(opacity as number)
+    this.changeOutlineColor(outlineColor as ColorRepresentation | null)
+    this.changeWireframe(wireframe as boolean)
   }
 
   /**
@@ -236,7 +226,7 @@ export class BaseObject {
 
   /**
    *
-   * @description 修改BaseObject的颜色
+   * @description 修改BaseObject的颜色,颜色可填写十六进制颜色值或 RGB 字符串。设置为 null,可取消勾边颜色
    * @param {ColorRepresentation | null} color - THREE.Color | string | number | null
    * @example 0xfff000 'rgb(250, 0,0)','rgb(100%,0%,0%)','hsl(0, 100%, 50%)','#ff0000','#f00','red',null
    */
@@ -275,7 +265,13 @@ export class BaseObject {
     })
   }
 
-  private changeOutlineColor(outlineColor: string | number) {
+  /**
+   *
+   * @description 修改BaseObject的勾边颜色,颜色可填写十六进制颜色值或 RGB 字符串。设置为 null,可取消勾边颜色
+   * @param {ColorRepresentation | null} outlineColor - THREE.Color | string | number | null
+   * @example 0xfff000 'rgb(250, 0,0)','rgb(100%,0%,0%)','hsl(0, 100%, 50%)','#ff0000','#f00','red',null
+   */
+  private changeOutlineColor(outlineColor: ColorRepresentation | null) {
     console.log(`change outline color to ${outlineColor}`)
   }
 
