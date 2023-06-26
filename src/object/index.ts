@@ -8,7 +8,8 @@ import {
   CurveType,
   Line,
   Scene,
-  ColorRepresentation
+  ColorRepresentation,
+  MathUtils
 } from 'three'
 
 import * as TWEEN from '@tweenjs/tween.js'
@@ -164,8 +165,44 @@ export class BaseObject {
     return tween // 返回tween对象 可用于中途暂停,重新播放
   }
 
-  rotate() {
-    console.log(this)
+  /**
+   * @description 让物体以本地坐标系下指定坐标轴旋转，默认 Y 轴。
+   * @param {number} angle  - 旋转角度值
+   * @param {number[]} axis - 方向轴，默认为物体 Y 轴方向
+   * @example rotate(30, [1,0,0]) // 绕自身 X 轴旋转30度，等同于 rotateX(30)
+   */
+  rotate(angle: number, axis: number[] = [0, 1, 0]) {
+    this.origin.rotateOnAxis(
+      new Vector3(axis[0], axis[1], axis[2]).normalize(),
+      angle * MathUtils.DEG2RAD
+    )
+  }
+
+  /**
+   * @description 绕自身 X 轴旋转。
+   * @param {number} angle  - 旋转角度值
+   * @example rotate(30) // 绕自身 X 轴旋转30度
+   */
+  rotateX(angle: number) {
+    this.origin.rotateX(angle * MathUtils.DEG2RAD)
+  }
+
+  /**
+   * @description 绕自身 Y 轴旋转。
+   * @param {number} angle  - 旋转角度值
+   * @example rotate(30) // 绕自身 Y 轴旋转30度
+   */
+  rotateY(angle: number) {
+    this.origin.rotateX(angle * MathUtils.DEG2RAD)
+  }
+
+  /**
+   * @description 绕自身 Z 轴旋转。
+   * @param {number} angle  - 旋转角度值
+   * @example rotate(30) // 绕自身 Z 轴旋转30度
+   */
+  rotateZ(angle: number) {
+    this.origin.rotateX(angle * MathUtils.DEG2RAD)
   }
 
   /**
