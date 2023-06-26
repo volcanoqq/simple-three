@@ -236,7 +236,7 @@ export class BaseObject {
         const meshMaterial = (object as THREE.Mesh)
           .material as THREE.MeshBasicMaterial
 
-        if (color === null || !color) {
+        if (color === null) {
           meshMaterial.color.set(this.origin.userData.colorMap.get(object.uuid))
         } else {
           meshMaterial.color.set(color)
