@@ -33,7 +33,7 @@ export class BaseObject {
       // 已有style数据
       const { style } = this.origin.userData
       if (style instanceof Array || !(style instanceof Object)) {
-        console.error('style数据格式错误')
+        throw new Error('style数据格式错误')
       }
     } else {
       // 自定义数据添加默认style
@@ -52,6 +52,7 @@ export class BaseObject {
           console.error('style数据格式错误')
         }
         this.origin.userData.style = value // 修改后的数据保存在userData里面
+        this.styleInit(value)
       },
       get: () => {
         // 代理userData.style对象
@@ -59,7 +60,7 @@ export class BaseObject {
           set: (target, prop, value) => {
             switch (prop) {
               case 'color':
-                this.changeColor(value as string)
+                this.changeColor(value as string | number)
                 break
 
               case 'opacity':
@@ -67,7 +68,10 @@ export class BaseObject {
                 break
 
               case 'outlineColor':
-                this.changeOutlineColor(value as boolean)
+                this.changeOutlineColor(value as string | number)
+                break
+              case 'wireframe':
+                this.changeWireframe(value as boolean)
                 break
 
               default:
@@ -93,6 +97,22 @@ export class BaseObject {
       requestAnimationFrame(this.update)
     }
     this.update()
+  }
+
+  private styleInit(style: BaseStyle) {
+    const { color, opacity, outlineColor, wireframe } = style
+    if (color) {
+      this.changeColor(color as string | number)
+    }
+    if (opacity) {
+      this.changeOpacity(opacity as number)
+    }
+    if (outlineColor) {
+      this.changeOutlineColor(outlineColor as string | number)
+    }
+    if (wireframe) {
+      this.changeWireframe(wireframe as boolean)
+    }
   }
 
   /**
@@ -199,7 +219,7 @@ export class BaseObject {
     console.log(scale)
   }
 
-  private changeColor(color: string) {
+  private changeColor(color: string | number) {
     console.log(`change color to ${color}`)
   }
 
@@ -207,7 +227,11 @@ export class BaseObject {
     console.log(`change opacity to ${opacity}`)
   }
 
-  private changeOutlineColor(outlineColor: boolean) {
+  private changeOutlineColor(outlineColor: string | number) {
     console.log(`change outline color to ${outlineColor}`)
+  }
+
+  private changeWireframe(wireframe: boolean) {
+    console.log(`change wireframe to ${wireframe}`)
   }
 }
