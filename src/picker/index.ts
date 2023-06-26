@@ -8,6 +8,14 @@ import {
   Camera
 } from 'three'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getObjectRecursion(object: any): any {
+  if (object.parent.name === 'Scene') {
+    return object
+  }
+  return getObjectRecursion(object.parent)
+}
+
 export enum PICKER_MODE {
   GPU = 'gpu',
   RAYCAST = 'raycast'
@@ -65,7 +73,7 @@ export class Picker extends EventTarget {
     }
 
     if (this.pickObject && this.pickedResultFunc) {
-      this.pickedResultFunc(this.pickObject)
+      this.pickedResultFunc(getObjectRecursion(this.pickObject))
     }
   }
 
