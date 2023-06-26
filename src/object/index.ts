@@ -118,7 +118,7 @@ export class BaseObject {
     if (color) {
       this.changeColor(color as ColorRepresentation | null)
     }
-    if (opacity) {
+    if (opacity === 0 || opacity) {
       this.changeOpacity(opacity as number)
     }
     if (outlineColor) {
@@ -255,8 +255,24 @@ export class BaseObject {
     })
   }
 
+  /**
+   *
+   * @description 修改BaseObject不透明度，0 为全透明，1 为不透明。
+   * @param {number} opacity - 值0.0表示完全透明，1.0表示完全不透明。
+   * @example changeOpacity(0.5)
+   */
   private changeOpacity(opacity: number) {
-    console.log(`change opacity to ${opacity}`)
+    this.origin.traverse((object) => {
+      if (object.type === 'Mesh') {
+        const meshMaterial = (object as THREE.Mesh)
+          .material as THREE.MeshBasicMaterial
+
+        // 在0.0 - 1.0的范围内的浮点数，表明材质的透明度。值0.0表示完全透明，1.0表示完全不透明。
+        // 如果材质的transparent属性未设置为true，则材质将保持完全不透明，此值仅影响其颜色。 默认值为1.0。
+        meshMaterial.transparent = true
+        meshMaterial.opacity = opacity
+      }
+    })
   }
 
   private changeOutlineColor(outlineColor: string | number) {
