@@ -275,7 +275,21 @@ export class BaseObject {
     console.log(`change outline color to ${outlineColor}`)
   }
 
+  /**
+   *
+   * @description 开启/关闭线框模式。
+   * @param {boolean} wireframe - true/false,开启/关闭线框模式。
+   * @example changeOpacity(true)
+   */
   private changeWireframe(wireframe: boolean) {
     console.log(`change wireframe to ${wireframe}`)
+    this.origin.traverse((object) => {
+      if (object.type === 'Mesh') {
+        const meshMaterial = (object as THREE.Mesh)
+          .material as THREE.MeshBasicMaterial
+
+        meshMaterial.wireframe = wireframe
+      }
+    })
   }
 }
