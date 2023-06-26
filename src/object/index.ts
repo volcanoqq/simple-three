@@ -7,13 +7,14 @@ import {
   LineBasicMaterial,
   CurveType,
   Line,
-  Scene
+  Scene,
+  ColorRepresentation
 } from 'three'
 
 import * as TWEEN from '@tweenjs/tween.js'
 
 interface BaseStyle {
-  color?: string | number | null // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
+  color?: ColorRepresentation | null // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
   opacity?: number // 设置/获取物体不透明度，0 为全透明，1 为不透明。
   outlineColor?: string | number // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
   wireframe?: boolean // 开启/关闭线框模式。
@@ -28,6 +29,19 @@ export class BaseObject {
   constructor(model: Object3D, scene: Scene) {
     this.origin = model
     this.scene = scene
+
+    // 保存原始颜色副本
+    this.origin.userData.colorMap = new Map()
+    this.origin.traverse((object) => {
+      if (object.type === 'Mesh') {
+        const meshMaterial = (object as THREE.Mesh)
+          .material as THREE.MeshBasicMaterial
+        this.origin.userData.colorMap.set(
+          object.uuid,
+          meshMaterial.color.clone()
+        )
+      }
+    })
 
     if (this.origin.userData.style) {
       // 已有style数据
@@ -49,7 +63,7 @@ export class BaseObject {
     Object.defineProperty(this, 'style', {
       set: (value: BaseStyle) => {
         if (value instanceof Array || !(value instanceof Object)) {
-          console.error('style数据格式错误')
+          throw new Error('style数据格式错误')
         }
         this.origin.userData.style = value // 修改后的数据保存在userData里面
         this.styleInit(value)
@@ -60,7 +74,7 @@ export class BaseObject {
           set: (target, prop, value) => {
             switch (prop) {
               case 'color':
-                this.changeColor(value as string | number)
+                this.changeColor(value as ColorRepresentation | null)
                 break
 
               case 'opacity':
@@ -102,7 +116,7 @@ export class BaseObject {
   private styleInit(style: BaseStyle) {
     const { color, opacity, outlineColor, wireframe } = style
     if (color) {
-      this.changeColor(color as string | number)
+      this.changeColor(color as ColorRepresentation | null)
     }
     if (opacity) {
       this.changeOpacity(opacity as number)
@@ -130,6 +144,7 @@ export class BaseObject {
    * @param {callback} options.stop - 停止的回调函数
    * @param {callback} options.complete - 完成的回调函数
    * @returns {TWEEN.Tween}
+   * @example movePath({ path:[[0,0,0],[1,1,1]], closed:false, time:2000})
    */
   movePath(options: {
     path: number[][]
@@ -219,8 +234,25 @@ export class BaseObject {
     console.log(scale)
   }
 
-  private changeColor(color: string | number) {
-    console.log(`change color to ${color}`)
+  /**
+   *
+   * @description 修改BaseObject的颜色
+   * @param {ColorRepresentation | null} color - THREE.Color | string | number | null
+   * @example 0xfff000 'rgb(250, 0,0)','rgb(100%,0%,0%)','hsl(0, 100%, 50%)','#ff0000','#f00','red',null
+   */
+  private changeColor(color: ColorRepresentation | null) {
+    this.origin.traverse((object) => {
+      if (object.type === 'Mesh') {
+        const meshMaterial = (object as THREE.Mesh)
+          .material as THREE.MeshBasicMaterial
+
+        if (color === null || !color) {
+          meshMaterial.color.set(this.origin.userData.colorMap.get(object.uuid))
+        } else {
+          meshMaterial.color.set(color)
+        }
+      }
+    })
   }
 
   private changeOpacity(opacity: number) {
