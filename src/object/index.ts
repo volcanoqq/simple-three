@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import {
   Object3D,
   Vector3,
@@ -12,15 +13,13 @@ import {
 import * as TWEEN from '@tweenjs/tween.js'
 
 interface BaseStyle {
-  color?: string | number
-  opacity?: number
-  outlineColor?: boolean
-  [key: string]: BaseStyle[keyof BaseStyle]
+  color?: string | number | null // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
+  opacity?: number // 设置/获取物体不透明度，0 为全透明，1 为不透明。
+  outlineColor?: string | number // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
+  wireframe?: boolean // 开启/关闭线框模式。
 }
 export class BaseObject {
-  style: BaseStyle = { color: 'none', opacity: 1, outlineColor: false }
-
-  origin: Object3D
+  origin: Object3D // 源对象
 
   scene: Scene
 
@@ -30,33 +29,63 @@ export class BaseObject {
     this.origin = model
     this.scene = scene
 
-    Object.keys(this.style).forEach((key) => {
-      let temp: BaseStyle[keyof BaseStyle] = this.style[key]
+    if (this.origin.userData.style) {
+      // 已有style数据
+      const { style } = this.origin.userData
+      if (style instanceof Array || !(style instanceof Object)) {
+        console.error('style数据格式错误')
+      }
+    } else {
+      // 自定义数据添加默认style
+      this.origin.userData.style = {
+        color: null, // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
+        opacity: 1, // 设置/获取物体不透明度，0 为全透明，1 为不透明。
+        outlineColor: '#ffffff', // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
+        wireframe: false // 开启/关闭线框模式。
+      }
+    }
 
-      Object.defineProperty(this.style, key, {
-        set: (value: BaseStyle[keyof BaseStyle]) => {
-          temp = value
-          switch (key) {
-            case 'color':
-              this.changeColor(value as string)
-              break
-
-            case 'opacity':
-              this.changeOpacity(value as number)
-              break
-
-            case 'outlineColor':
-              this.changeOutlineColor(value as boolean)
-              break
-
-            default:
-              break
-          }
-        },
-        get: () => {
-          return temp
+    // 代理style对象
+    Object.defineProperty(this, 'style', {
+      set: (value: BaseStyle) => {
+        if (value instanceof Array || !(value instanceof Object)) {
+          console.error('style数据格式错误')
         }
-      })
+        this.origin.userData.style = value // 修改后的数据保存在userData里面
+      },
+      get: () => {
+        // 代理userData.style对象
+        return new Proxy(this.origin.userData.style, {
+          set: (target, prop, value) => {
+            switch (prop) {
+              case 'color':
+                this.changeColor(value as string)
+                break
+
+              case 'opacity':
+                this.changeOpacity(value as number)
+                break
+
+              case 'outlineColor':
+                this.changeOutlineColor(value as boolean)
+                break
+
+              default:
+                break
+            }
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            // eslint-disable-next-line no-param-reassign
+            target[prop] = value
+            return true
+          },
+          get: (target, prop) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            return target[prop]
+          }
+        })
+      }
     })
 
     this.update = () => {
@@ -171,17 +200,14 @@ export class BaseObject {
   }
 
   private changeColor(color: string) {
-    console.log(`change color to ${color}`, this.style.color)
+    console.log(`change color to ${color}`)
   }
 
   private changeOpacity(opacity: number) {
-    console.log(`change opacity to ${opacity}`, this.style.opacity)
+    console.log(`change opacity to ${opacity}`)
   }
 
   private changeOutlineColor(outlineColor: boolean) {
-    console.log(
-      `change outline color to ${outlineColor}`,
-      this.style.outlineColor
-    )
+    console.log(`change outline color to ${outlineColor}`)
   }
 }

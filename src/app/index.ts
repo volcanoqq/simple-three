@@ -31,6 +31,8 @@ export class App {
 
   picker: Picker
 
+  // cacheBaseObject: Map<string, BaseObject>
+
   constructor(config: Config, inited?: Inited) {
     const { dom, url, background } = config
 
@@ -67,6 +69,8 @@ export class App {
       this.camera.viewportCamera,
       this.renderer
     )
+
+    // this.cacheBaseObject = new Map()
 
     this.render()
   }
@@ -106,8 +110,10 @@ export class App {
   // 查询 指定name 的对象集合
   query(name: string) {
     const objects: BaseObject[] = []
+    let baseObject: BaseObject
     this.getObjectsByProperty('name', name).forEach((v) => {
-      objects.push(new BaseObject(v, this.scene))
+      baseObject = new BaseObject(v, this.scene)
+      objects.push(baseObject)
     })
     return objects
   }
