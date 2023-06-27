@@ -327,4 +327,12 @@ export class BaseObject {
   set scale(value: number[]) {
     this.origin.scale.set(value[0], value[1], value[2])
   }
+
+  get visible(): boolean {
+    return this.origin.visible
+  }
+
+  set visible(value: boolean) {
+    this.origin.visible = value
+  }
 }
