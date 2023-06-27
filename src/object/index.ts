@@ -48,7 +48,7 @@ export class BaseObject {
       // 已有style数据
       const { style } = this.origin.userData
       if (style instanceof Array || !(style instanceof Object)) {
-        throw new Error('style数据格式错误')
+        throw new Error('BaseObject的style数据格式错误,应该是一个Object')
       }
     } else {
       // 自定义数据添加默认style
@@ -211,19 +211,20 @@ export class BaseObject {
    * @param {ColorRepresentation | null} color - THREE.Color | string | number | null
    * @example 0xfff000 'rgb(250, 0,0)','rgb(100%,0%,0%)','hsl(0, 100%, 50%)','#ff0000','#f00','red',null
    */
-  private changeColor(color: ColorRepresentation | null) {
+  private changeColor(color: ColorRepresentation | null = null) {
     this.origin.traverse((object) => {
       if (object.type === 'Mesh') {
         const meshMaterial = (object as THREE.Mesh)
           .material as THREE.MeshBasicMaterial
 
-        if (color === null || color === undefined) {
+        if (color === null) {
           meshMaterial.color.set(this.origin.userData.colorMap.get(object.uuid))
         } else {
           meshMaterial.color.set(color)
         }
       }
     })
+    this.origin.userData.style.color = color
   }
 
   /**
@@ -232,7 +233,7 @@ export class BaseObject {
    * @param {number} opacity - 值0.0表示完全透明，1.0表示完全不透明。
    * @example changeOpacity(0.5)
    */
-  private changeOpacity(opacity: number) {
+  private changeOpacity(opacity = 1) {
     this.origin.traverse((object) => {
       if (object.type === 'Mesh') {
         const meshMaterial = (object as THREE.Mesh)
@@ -244,6 +245,7 @@ export class BaseObject {
         meshMaterial.opacity = opacity
       }
     })
+    this.origin.userData.style.opacity = opacity
   }
 
   /**
@@ -252,8 +254,8 @@ export class BaseObject {
    * @param {ColorRepresentation | null} outlineColor - THREE.Color | string | number | null
    * @example 0xfff000 'rgb(250, 0,0)','rgb(100%,0%,0%)','hsl(0, 100%, 50%)','#ff0000','#f00','red',null
    */
-  private changeOutlineColor(outlineColor: ColorRepresentation | null) {
-    console.log(`change outline color to ${outlineColor}`)
+  private changeOutlineColor(outlineColor: ColorRepresentation | null = null) {
+    this.origin.userData.style.outlineColor = outlineColor
   }
 
   /**
@@ -262,8 +264,7 @@ export class BaseObject {
    * @param {boolean} wireframe - true/false,开启/关闭线框模式。
    * @example changeOpacity(true)
    */
-  private changeWireframe(wireframe: boolean) {
-    console.log(`change wireframe to ${wireframe}`)
+  private changeWireframe(wireframe = false) {
     this.origin.traverse((object) => {
       if (object.type === 'Mesh') {
         const meshMaterial = (object as THREE.Mesh)
@@ -272,6 +273,7 @@ export class BaseObject {
         meshMaterial.wireframe = wireframe
       }
     })
+    this.origin.userData.style.wireframe = wireframe
   }
 
   // 返回Proxy 代理this.origin.userData.style
@@ -295,10 +297,6 @@ export class BaseObject {
           default:
             break
         }
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        // eslint-disable-next-line no-param-reassign
-        target[prop] = value
         return true
       },
       get: (target, prop) => {
@@ -311,10 +309,10 @@ export class BaseObject {
 
   set style(value: BaseStyle) {
     if (value instanceof Array || !(value instanceof Object)) {
-      throw new Error('style数据格式错误')
+      throw new Error('BaseObject的style数据格式错误,应该是一个Object')
     }
-    this.origin.userData.style = value // 修改后的数据保存在userData里面
     const { color, opacity, outlineColor, wireframe } = value
+    // 修改后的数据保存在userData里面
     this.changeColor(color as ColorRepresentation | null)
     this.changeOpacity(opacity as number)
     this.changeOutlineColor(outlineColor as ColorRepresentation | null)
