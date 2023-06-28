@@ -5,11 +5,8 @@ import {
   Scene,
   WebGLRenderer,
   Object3D,
-  Camera,
-  ColorRepresentation
+  Camera
 } from 'three'
-
-import { OutlineManager } from './outlineManager'
 
 import { BaseObject } from '../object'
 
@@ -46,16 +43,9 @@ export class Picker extends EventTarget {
 
   pickedResultFunc: ((obj: BaseObject | null) => void) | null = null
 
-  OutlineManager: OutlineManager
-
   cachePickBaseObject: Map<string, BaseObject> = new Map()
 
-  constructor(
-    scene: Scene,
-    viewportCamera: Camera,
-    renderer: WebGLRenderer,
-    outlineManager: OutlineManager
-  ) {
+  constructor(scene: Scene, viewportCamera: Camera, renderer: WebGLRenderer) {
     super()
 
     this.scene = scene
@@ -63,8 +53,6 @@ export class Picker extends EventTarget {
     this.viewportCamera = viewportCamera
 
     this.renderer = renderer
-
-    this.OutlineManager = outlineManager
   }
 
   pick = (event: MouseEvent) => {
@@ -79,37 +67,20 @@ export class Picker extends EventTarget {
       this.#pickRaycast()
     }
 
+    let object: BaseObject | null = null
     if (this.pickObject) {
       const group = getObjectRecursion(this.pickObject) // 递归寻找父元素模型
 
-      let object: BaseObject
       if (this.cachePickBaseObject.has(group.uuid)) {
         object = this.cachePickBaseObject.get(group.uuid) as BaseObject // 从缓存中获取
       } else {
         object = new BaseObject(group, this.scene)
         this.cachePickBaseObject.set(object.origin.uuid, object) // 保存
       }
-
-      //  设置物体勾边
-      if (object.pickable && object.style.outlineColor !== null) {
-        this.OutlineManager.setOutLine(
-          [object.origin],
-          object.style.outlineColor as ColorRepresentation
-        )
-      }
-
-      // 处理callback
-      if (this.pickedResultFunc) {
-        this.pickedResultFunc(object)
-      }
-    } else {
-      this.OutlineManager.clear() // 清空勾边物体
-
-      // 处理callback
-      if (this.pickedResultFunc) {
-        this.pickedResultFunc(null)
-      }
     }
+
+    // 处理callback
+    this.pickedResultFunc?.(object)
   }
 
   #pickGPU = () => {

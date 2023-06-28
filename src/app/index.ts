@@ -76,8 +76,7 @@ export class App {
     this.picker = new Picker(
       this.scene,
       this.camera.viewportCamera,
-      this.renderer,
-      this.OutlineManager
+      this.renderer
     )
 
     // this.cacheBaseObject = new Map()
