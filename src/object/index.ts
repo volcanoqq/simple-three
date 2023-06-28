@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import {
   Object3D,
   Vector3,
@@ -31,7 +30,21 @@ export class BaseObject {
     this.origin = model
     this.scene = scene
 
-    // 保存原始颜色副本
+    this.initUserData() // 初始化this.origin.userData
+
+    this.update = () => {
+      TWEEN.update()
+      requestAnimationFrame(this.update)
+    }
+    this.update()
+  }
+
+  private initUserData() {
+    if (this.origin.userData.pickable === undefined) {
+      this.origin.userData.pickable = true // 默认可拾取
+    }
+
+    // 保存原始材质颜色副本
     this.origin.userData.colorMap = new Map()
     this.origin.traverse((object) => {
       if (object.type === 'Mesh') {
@@ -59,12 +72,6 @@ export class BaseObject {
         wireframe: false // 开启/关闭线框模式。
       }
     }
-
-    this.update = () => {
-      TWEEN.update()
-      requestAnimationFrame(this.update)
-    }
-    this.update()
   }
 
   /**
@@ -334,5 +341,13 @@ export class BaseObject {
 
   set visible(value: boolean) {
     this.origin.visible = value
+  }
+
+  get pickable(): boolean {
+    return this.origin.userData.pickable
+  }
+
+  set pickable(value: boolean) {
+    this.origin.userData.pickable = value
   }
 }

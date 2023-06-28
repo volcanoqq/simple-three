@@ -5,6 +5,7 @@ import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { CameraController } from '../camera'
 import { Picker } from '../picker'
 import { BaseObject } from '../object'
+import { OutlineManager } from '../picker/outlineManager'
 
 interface Config {
   dom: HTMLCanvasElement
@@ -30,6 +31,8 @@ export class App {
   css3DRenderer: CSS3DRenderer
 
   picker: Picker
+
+  OutlineManager: OutlineManager
 
   // cacheBaseObject: Map<string, BaseObject>
 
@@ -64,10 +67,17 @@ export class App {
     ambient.name = '环境光'
     this.scene.add(ambient)
 
+    this.OutlineManager = new OutlineManager(
+      this.camera.viewportCamera,
+      this.scene,
+      this.renderer
+    )
+
     this.picker = new Picker(
       this.scene,
       this.camera.viewportCamera,
-      this.renderer
+      this.renderer,
+      this.OutlineManager
     )
 
     // this.cacheBaseObject = new Map()
@@ -84,6 +94,7 @@ export class App {
 
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(width, height)
+    this.renderer.shadowMap.enabled = true
     dom.appendChild(this.renderer.domElement)
 
     this.css2DRenderer.setSize(width, height)
@@ -155,6 +166,7 @@ export class App {
     this.css3DRenderer.render(this.scene, this.camera.viewportCamera)
     this.renderer.render(this.scene, this.camera.viewportCamera)
 
+    this.OutlineManager.update()
     requestAnimationFrame(this.render.bind(this))
   }
 }

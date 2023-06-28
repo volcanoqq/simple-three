@@ -5,8 +5,13 @@ import {
   Scene,
   WebGLRenderer,
   Object3D,
-  Camera
+  Camera,
+  ColorRepresentation
 } from 'three'
+
+import { OutlineManager } from './outlineManager'
+
+import { BaseObject } from '../object'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getObjectRecursion(object: any): any {
@@ -20,6 +25,8 @@ export enum PICKER_MODE {
   GPU = 'gpu',
   RAYCAST = 'raycast'
 }
+
+type Mode = PICKER_MODE.GPU | PICKER_MODE.RAYCAST
 export class Picker extends EventTarget {
   scene: Scene
 
@@ -31,15 +38,24 @@ export class Picker extends EventTarget {
 
   pickPosition: Vector3 | null = null
 
-  #mode: PICKER_MODE = PICKER_MODE.RAYCAST // 默认使用RAYCAST picker
+  mode: Mode = PICKER_MODE.RAYCAST // 默认使用RAYCAST picker
 
-  #mouse: Vector2 = new Vector2()
+  mouse: Vector2 = new Vector2()
 
   #raycaster: Raycaster = new Raycaster()
 
-  pickedResultFunc: ((obj: Object3D) => void) | null = null
+  pickedResultFunc: ((obj: BaseObject | null) => void) | null = null
 
-  constructor(scene: Scene, viewportCamera: Camera, renderer: WebGLRenderer) {
+  OutlineManager: OutlineManager
+
+  cachePickBaseObject: Map<string, BaseObject> = new Map()
+
+  constructor(
+    scene: Scene,
+    viewportCamera: Camera,
+    renderer: WebGLRenderer,
+    outlineManager: OutlineManager
+  ) {
     super()
 
     this.scene = scene
@@ -48,32 +64,51 @@ export class Picker extends EventTarget {
 
     this.renderer = renderer
 
-    console.log('picker初始化完成')
-  }
-
-  setMode(mode: PICKER_MODE) {
-    if (mode !== PICKER_MODE.GPU && mode !== PICKER_MODE.RAYCAST) {
-      console.error('Unknown picker mode:', mode)
-      return
-    }
-    this.#mode = mode
+    this.OutlineManager = outlineManager
   }
 
   pick = (event: MouseEvent) => {
     event.preventDefault()
     const canvas = this.renderer.domElement
     const pos = this.#getCanvasRelativePosition(event)
-    this.#mouse.x = (pos.x / canvas.width) * 2 - 1
-    this.#mouse.y = (pos.y / canvas.height) * -2 + 1 // note we flip Y
-
-    if (this.#mode === PICKER_MODE.GPU) {
+    this.mouse.x = (pos.x / canvas.width) * 2 - 1
+    this.mouse.y = (pos.y / canvas.height) * -2 + 1 // note we flip Y
+    if (this.mode === PICKER_MODE.GPU) {
       this.#pickGPU()
-    } else if (this.#mode === PICKER_MODE.RAYCAST) {
+    } else if (this.mode === PICKER_MODE.RAYCAST) {
       this.#pickRaycast()
     }
 
-    if (this.pickObject && this.pickedResultFunc) {
-      this.pickedResultFunc(getObjectRecursion(this.pickObject))
+    if (this.pickObject) {
+      const group = getObjectRecursion(this.pickObject) // 递归寻找父元素模型
+
+      let object: BaseObject
+      if (this.cachePickBaseObject.has(group.uuid)) {
+        object = this.cachePickBaseObject.get(group.uuid) as BaseObject // 从缓存中获取
+      } else {
+        object = new BaseObject(group, this.scene)
+        this.cachePickBaseObject.set(object.origin.uuid, object) // 保存
+      }
+
+      //  设置物体勾边
+      if (object.pickable && object.style.outlineColor !== null) {
+        this.OutlineManager.setOutLine(
+          [object.origin],
+          object.style.outlineColor as ColorRepresentation
+        )
+      }
+
+      // 处理callback
+      if (this.pickedResultFunc) {
+        this.pickedResultFunc(object)
+      }
+    } else {
+      this.OutlineManager.clear() // 清空勾边物体
+
+      // 处理callback
+      if (this.pickedResultFunc) {
+        this.pickedResultFunc(null)
+      }
     }
   }
 
@@ -82,7 +117,7 @@ export class Picker extends EventTarget {
   }
 
   #pickRaycast = () => {
-    this.#raycaster.setFromCamera(this.#mouse, this.viewportCamera)
+    this.#raycaster.setFromCamera(this.mouse, this.viewportCamera)
     const intersectedObjects = this.#raycaster.intersectObjects(
       this.scene.children
     )
