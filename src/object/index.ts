@@ -49,8 +49,6 @@ export class BaseObject {
       requestAnimationFrame(this.update)
     }
     this.update()
-
-    this.app.cacheBaseObject.set(this.origin.uuid, this) // 保存
   }
 
   private initUserData() {

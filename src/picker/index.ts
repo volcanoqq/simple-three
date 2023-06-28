@@ -46,8 +46,6 @@ export class Picker extends EventTarget {
 
   pickedResultFunc: ((obj: BaseObject | null) => void) | null = null
 
-  cachePickBaseObject: Map<string, BaseObject>
-
   constructor(app: App) {
     super()
 
@@ -56,8 +54,6 @@ export class Picker extends EventTarget {
     this.viewportCamera = app.camera.viewportCamera
 
     this.renderer = app.renderer
-
-    this.cachePickBaseObject = app.cacheBaseObject
 
     this.app = app
   }
@@ -78,11 +74,7 @@ export class Picker extends EventTarget {
     if (this.pickObject) {
       const group = getObjectRecursion(this.pickObject) // 递归寻找父元素模型
 
-      if (this.cachePickBaseObject.has(group.uuid)) {
-        object = this.cachePickBaseObject.get(group.uuid) as BaseObject // 从缓存中获取
-      } else {
-        object = new BaseObject(group, this.app)
-      }
+      object = this.app.createBaseObeject(group)
     }
 
     // 处理callback

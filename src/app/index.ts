@@ -128,17 +128,24 @@ export class App {
     return this
   }
 
+  // 创建BaseObeject实例
+  createBaseObeject(object: THREE.Object3D) {
+    let baseObject: BaseObject
+    // 判断缓存中是否存在
+    if (this.cacheBaseObject.has(object.uuid)) {
+      baseObject = this.cacheBaseObject.get(object.uuid) as BaseObject // 从缓存中获取
+    } else {
+      baseObject = new BaseObject(object, this)
+      this.cacheBaseObject.set(object.uuid, baseObject) // 保存
+    }
+    return baseObject
+  }
+
   // 查询 指定name 的对象集合
   query(name: string) {
     const objects: BaseObject[] = []
-    let baseObject: BaseObject
     this.getObjectsByProperty('name', name).forEach((item) => {
-      if (this.cacheBaseObject.has(item.uuid)) {
-        baseObject = this.cacheBaseObject.get(item.uuid) as BaseObject // 从缓存中获取
-      } else {
-        baseObject = new BaseObject(item, this)
-      }
-      objects.push(baseObject)
+      objects.push(this.createBaseObeject(item))
     })
     return objects
   }
