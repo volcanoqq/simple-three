@@ -6,12 +6,13 @@ import {
   LineBasicMaterial,
   CurveType,
   Line,
-  Scene,
   ColorRepresentation,
   MathUtils
 } from 'three'
 
 import * as TWEEN from '@tweenjs/tween.js'
+import { App } from '..'
+import { OutlineManager } from './outlineManager'
 
 interface BaseStyle {
   color?: ColorRepresentation | null // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
@@ -22,13 +23,24 @@ interface BaseStyle {
 export class BaseObject {
   origin: Object3D // 源对象
 
-  scene: Scene
+  app: App
+
+  outlineManager: OutlineManager
 
   update: () => void
 
-  constructor(model: Object3D, scene: Scene) {
+  constructor(model: Object3D, app: App) {
     this.origin = model
-    this.scene = scene
+
+    this.outlineManager = new OutlineManager(
+      app.camera.viewportCamera,
+      app.scene,
+      app.renderer
+    )
+
+    app.composer.addPass(this.outlineManager.outlinePass)
+
+    this.app = app
 
     this.initUserData() // 初始化this.origin.userData
 
@@ -37,6 +49,8 @@ export class BaseObject {
       requestAnimationFrame(this.update)
     }
     this.update()
+
+    this.app.cacheBaseObject.set(this.origin.uuid, this) // 保存
   }
 
   private initUserData() {
@@ -127,7 +141,7 @@ export class BaseObject {
     const material = new LineBasicMaterial({ color: 0xff0000 })
 
     const curveObject = new Line(geometry, material) // 路径曲线
-    this.scene.add(curveObject)
+    this.app.scene.add(curveObject)
 
     const totalLength = curve.getLength() // 获取路径的总长度
     const tween = new TWEEN.Tween({ distance: 0 }) // 从线段起点运动到线段最末端
@@ -262,6 +276,11 @@ export class BaseObject {
    * @example 0xfff000 'rgb(250, 0,0)','rgb(100%,0%,0%)','hsl(0, 100%, 50%)','#ff0000','#f00','red',null
    */
   private changeOutlineColor(outlineColor: ColorRepresentation | null = null) {
+    if (outlineColor === null) {
+      this.outlineManager.clear()
+    } else {
+      this.outlineManager.setOutLine(this, outlineColor)
+    }
     this.origin.userData.style.outlineColor = outlineColor
   }
 

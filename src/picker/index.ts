@@ -9,6 +9,7 @@ import {
 } from 'three'
 
 import { BaseObject } from '../object'
+import { App } from '..'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getObjectRecursion(object: any): any {
@@ -31,6 +32,8 @@ export class Picker extends EventTarget {
 
   renderer: WebGLRenderer
 
+  app: App
+
   pickObject: Object3D | null = null
 
   pickPosition: Vector3 | null = null
@@ -43,16 +46,20 @@ export class Picker extends EventTarget {
 
   pickedResultFunc: ((obj: BaseObject | null) => void) | null = null
 
-  cachePickBaseObject: Map<string, BaseObject> = new Map()
+  cachePickBaseObject: Map<string, BaseObject>
 
-  constructor(scene: Scene, viewportCamera: Camera, renderer: WebGLRenderer) {
+  constructor(app: App) {
     super()
 
-    this.scene = scene
+    this.scene = app.scene
 
-    this.viewportCamera = viewportCamera
+    this.viewportCamera = app.camera.viewportCamera
 
-    this.renderer = renderer
+    this.renderer = app.renderer
+
+    this.cachePickBaseObject = app.cacheBaseObject
+
+    this.app = app
   }
 
   pick = (event: MouseEvent) => {
@@ -74,8 +81,7 @@ export class Picker extends EventTarget {
       if (this.cachePickBaseObject.has(group.uuid)) {
         object = this.cachePickBaseObject.get(group.uuid) as BaseObject // 从缓存中获取
       } else {
-        object = new BaseObject(group, this.scene)
-        this.cachePickBaseObject.set(object.origin.uuid, object) // 保存
+        object = new BaseObject(group, this.app)
       }
     }
 

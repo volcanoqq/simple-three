@@ -2,10 +2,15 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
 import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
+import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js'
+import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js'
+
 import { CameraController } from '../camera'
 import { Picker } from '../picker'
 import { BaseObject } from '../object'
-import { OutlineManager } from '../picker/outlineManager'
 
 interface Config {
   dom: HTMLCanvasElement
@@ -32,9 +37,9 @@ export class App {
 
   picker: Picker
 
-  OutlineManager: OutlineManager
+  composer: EffectComposer
 
-  // cacheBaseObject: Map<string, BaseObject>
+  cacheBaseObject: Map<string, BaseObject> = new Map()
 
   constructor(config: Config, inited?: Inited) {
     const { dom, url, background } = config
@@ -67,17 +72,23 @@ export class App {
     ambient.name = '环境光'
     this.scene.add(ambient)
 
-    this.OutlineManager = new OutlineManager(
-      this.camera.viewportCamera,
-      this.scene,
-      this.renderer
-    )
+    this.composer = new EffectComposer(this.renderer)
+    const renderPass = new RenderPass(this.scene, this.camera.viewportCamera)
+    this.composer.addPass(renderPass)
 
-    this.picker = new Picker(
-      this.scene,
-      this.camera.viewportCamera,
-      this.renderer
+    // 后处理 颜色异常(伽马校正)
+    const gammaPass = new ShaderPass(GammaCorrectionShader)
+    this.composer.addPass(gammaPass)
+
+    // 抗锯齿后处理
+    const pixelRatio = this.renderer.getPixelRatio()
+    const effectSMAA = new SMAAPass(
+      this.renderer.domElement.width * pixelRatio,
+      this.renderer.domElement.height * pixelRatio
     )
+    this.composer.addPass(effectSMAA)
+
+    this.picker = new Picker(this)
 
     // this.cacheBaseObject = new Map()
 
@@ -121,8 +132,12 @@ export class App {
   query(name: string) {
     const objects: BaseObject[] = []
     let baseObject: BaseObject
-    this.getObjectsByProperty('name', name).forEach((v) => {
-      baseObject = new BaseObject(v, this.scene)
+    this.getObjectsByProperty('name', name).forEach((item) => {
+      if (this.cacheBaseObject.has(item.uuid)) {
+        baseObject = this.cacheBaseObject.get(item.uuid) as BaseObject // 从缓存中获取
+      } else {
+        baseObject = new BaseObject(item, this)
+      }
       objects.push(baseObject)
     })
     return objects
@@ -165,7 +180,7 @@ export class App {
     this.css3DRenderer.render(this.scene, this.camera.viewportCamera)
     this.renderer.render(this.scene, this.camera.viewportCamera)
 
-    this.OutlineManager.update()
+    this.composer.render()
     requestAnimationFrame(this.render.bind(this))
   }
 }
