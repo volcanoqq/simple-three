@@ -25,7 +25,7 @@ export enum PICKER_MODE {
 }
 
 type Mode = PICKER_MODE.GPU | PICKER_MODE.RAYCAST
-export class Picker extends EventTarget {
+export class Picker {
   scene: Scene
 
   viewportCamera: Camera
@@ -34,21 +34,21 @@ export class Picker extends EventTarget {
 
   app: App
 
-  pickObject: Object3D | null = null
+  pickObject: Object3D | null = null // 选中的材质
 
-  pickPosition: Vector3 | null = null
+  pickPosition: Vector3 | null = null // 鼠标在三维世界里的坐标
 
-  mode: Mode = PICKER_MODE.RAYCAST // 默认使用RAYCAST picker
+  mode: Mode = PICKER_MODE.RAYCAST // 拾取模式 默认使用RAYCAST picker
 
-  mouse: Vector2 = new Vector2()
+  mouse: Vector2 = new Vector2() // 鼠标的屏幕坐标
 
   #raycaster: Raycaster = new Raycaster()
 
-  pickedResultFunc: ((obj: BaseObject | null) => void) | null = null
+  pickedResultFunc: ((obj: BaseObject | null) => void) | null = null // 回调函数
+
+  pickBaseObject: BaseObject | null = null // 选中的物体
 
   constructor(app: App) {
-    super()
-
     this.scene = app.scene
 
     this.viewportCamera = app.camera.viewportCamera
@@ -56,6 +56,9 @@ export class Picker extends EventTarget {
     this.renderer = app.renderer
 
     this.app = app
+
+    this.renderer.domElement.addEventListener('click', this.pick, false)
+    this.renderer.domElement.addEventListener('mousemove', this.pick, false)
   }
 
   pick = (event: MouseEvent) => {
@@ -70,15 +73,33 @@ export class Picker extends EventTarget {
       this.#pickRaycast()
     }
 
-    let object: BaseObject | null = null
+    let object: BaseObject | null = null // 选中的新物体
+
     if (this.pickObject) {
       const group = getObjectRecursion(this.pickObject) // 递归寻找父元素模型
-
       object = this.app.createBaseObeject(group)
     }
 
+    // 鼠标移动
+    if (event.type === 'mousemove') {
+      if (object) {
+        if (this.pickBaseObject !== object) {
+          object.dispatchEvent({ type: 'mouseenter' })
+        } else {
+          object.dispatchEvent({ type: 'mousemove' })
+        }
+      } else if (this.pickBaseObject !== object && this.pickBaseObject) {
+        this.pickBaseObject.dispatchEvent({ type: 'mouseleave' })
+      }
+    } else if (object) {
+      // 其他事件
+      object.dispatchEvent({ type: event.type })
+    }
+
+    this.pickBaseObject = object
+
     // 处理callback
-    this.pickedResultFunc?.(object)
+    this.pickedResultFunc?.(this.pickBaseObject)
   }
 
   #pickGPU = () => {

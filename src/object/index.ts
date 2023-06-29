@@ -13,6 +13,7 @@ import {
 import * as TWEEN from '@tweenjs/tween.js'
 import { App } from '..'
 import { OutlineManager } from './outlineManager'
+import { EventDispatcher } from '../utils/EventDispatcher'
 
 interface BaseStyle {
   color?: ColorRepresentation | null // 设置/获取物体颜色，可填写十六进制颜色值或 RGB 字符串，设置为 null，可取消颜色。
@@ -20,7 +21,7 @@ interface BaseStyle {
   outlineColor?: ColorRepresentation | null // 设置/获取物体勾边颜色，颜色可填写十六进制颜色值或 RGB 字符串。设置为 null，可取消勾边颜色。
   wireframe?: boolean // 开启/关闭线框模式。
 }
-export class BaseObject {
+export class BaseObject extends EventDispatcher {
   origin: Object3D // 源对象
 
   app: App
@@ -30,6 +31,8 @@ export class BaseObject {
   update: () => void
 
   constructor(model: Object3D, app: App) {
+    super()
+
     this.origin = model
 
     this.outlineManager = new OutlineManager(
