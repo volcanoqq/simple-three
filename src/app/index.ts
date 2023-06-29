@@ -135,7 +135,18 @@ export class App {
     return this
   }
 
-  createLabel(type: string, dom: HTMLElement, baseObject?: BaseObject) {
+  /**
+   * @description 创建标注
+   * @param {'2d' | '3d' | 'sprite'} type - 类型
+   * @param {HTMLElement} dom - dom元素
+   * @param {BaseObject} baseObject - 标注的物体
+   * @returns {CSS2DObject | CSS3DObject} 标注实例
+   */
+  createLabel(
+    type: '2d' | '3d' | 'sprite',
+    dom: HTMLElement,
+    baseObject?: BaseObject
+  ) {
     let object
     switch (type) {
       case '2d':
@@ -148,21 +159,24 @@ export class App {
         object = new CSS3DSprite(dom)
         break
       default:
-        break
+        throw new Error('type should be 2d or 3d or sprite')
     }
     const el = dom
     el.style.pointerEvents = 'none'
     el.style.backfaceVisibility = 'hidden'
-    if (object) {
-      if (baseObject) {
-        baseObject.origin.add(object)
-      } else {
-        this.scene.add(object)
-      }
+    if (baseObject) {
+      baseObject.origin.add(object)
+    } else {
+      this.scene.add(object)
     }
+    return object
   }
 
-  // 创建BaseObeject实例
+  /**
+   * @description 创建BaseObeject实例
+   * @param {THREE.Object3D} object - Object3D
+   * @returns {BaseObject} BaseObeject实例
+   */
   createBaseObeject(object: THREE.Object3D) {
     let baseObject: BaseObject
     // 判断缓存中是否存在
@@ -175,7 +189,11 @@ export class App {
     return baseObject
   }
 
-  // 查询 指定name 的对象集合
+  /**
+   * @description 查询 指定name 的对象集合
+   * @param {string} name - 名称
+   * @returns {BaseObject[]} BaseObject数组
+   */
   query(name: string) {
     const objects: BaseObject[] = []
     this.getObjectsByProperty('name', name).forEach((item) => {
