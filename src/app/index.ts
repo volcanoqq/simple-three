@@ -1,7 +1,14 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
-import { CSS3DRenderer } from 'three/examples/jsm/renderers/CSS3DRenderer.js'
+import {
+  CSS2DRenderer,
+  CSS2DObject
+} from 'three/examples/jsm/renderers/CSS2DRenderer.js'
+import {
+  CSS3DRenderer,
+  CSS3DObject,
+  CSS3DSprite
+} from 'three/examples/jsm/renderers/CSS3DRenderer.js'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
@@ -126,6 +133,33 @@ export class App {
     this.scene = scene
 
     return this
+  }
+
+  createLabel(type: string, dom: HTMLElement, baseObject?: BaseObject) {
+    let object
+    switch (type) {
+      case '2d':
+        object = new CSS2DObject(dom)
+        break
+      case '3d':
+        object = new CSS3DObject(dom)
+        break
+      case 'sprite':
+        object = new CSS3DSprite(dom)
+        break
+      default:
+        break
+    }
+    const el = dom
+    el.style.pointerEvents = 'none'
+    el.style.backfaceVisibility = 'hidden'
+    if (object) {
+      if (baseObject) {
+        baseObject.origin.add(object)
+      } else {
+        this.scene.add(object)
+      }
+    }
   }
 
   // 创建BaseObeject实例

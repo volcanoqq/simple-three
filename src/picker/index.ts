@@ -13,7 +13,7 @@ import { App } from '..'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getObjectRecursion(object: any): any {
-  if (object.parent.name === 'Scene') {
+  if (object.parent.name === 'Scene' || object.parent.type === 'Scene') {
     return object
   }
   return getObjectRecursion(object.parent)
@@ -46,7 +46,7 @@ export class Picker {
 
   pickedResultFunc: ((obj: BaseObject | null) => void) | null = null // 回调函数
 
-  pickBaseObject: BaseObject | null = null // 选中的物体
+  pickBaseObject: BaseObject | null = null // 选中的物体(缓存)
 
   constructor(app: App) {
     this.scene = app.scene
@@ -80,15 +80,24 @@ export class Picker {
       object = this.app.createBaseObeject(group)
     }
 
-    // 鼠标移动
     if (event.type === 'mousemove') {
+      // 鼠标移动
       if (object) {
+        // 鼠标拾取到物体object
         if (this.pickBaseObject !== object) {
+          // 上一次缓存拾取的物体pickBaseObject和当前拾取的物体object不同
+          if (this.pickBaseObject) {
+            // 上一次缓存拾取的物体pickBaseObject存在  鼠标移出缓存的pickBaseObject物体
+            this.pickBaseObject.dispatchEvent({ type: 'mouseleave' })
+          }
+          // 当前物体 鼠标移入
           object.dispatchEvent({ type: 'mouseenter' })
         } else {
+          // 上一次缓存拾取的物体pickBaseObject和当前拾取的物体object相同 鼠标移动
           object.dispatchEvent({ type: 'mousemove' })
         }
       } else if (this.pickBaseObject !== object && this.pickBaseObject) {
+        // 当前鼠标没有拾取到物体 如果存在pickBaseObject  移出物体
         this.pickBaseObject.dispatchEvent({ type: 'mouseleave' })
       }
     } else if (object) {
@@ -96,7 +105,7 @@ export class Picker {
       object.dispatchEvent({ type: event.type })
     }
 
-    this.pickBaseObject = object
+    this.pickBaseObject = object // 缓存更新
 
     // 处理callback
     this.pickedResultFunc?.(this.pickBaseObject)
