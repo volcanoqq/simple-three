@@ -137,38 +137,42 @@ export class App {
 
   /**
    * @description 创建标注
-   * @param {'2d' | '3d' | 'sprite'} type - 类型
-   * @param {HTMLElement} dom - dom元素
-   * @param {BaseObject} baseObject - 标注的物体
+   * @param options - 配置项
+   * @param {'2d' | '3d' | 'sprite'} options.type - 类型
+   * @param {HTMLElement} options.dom - dom元素
+   * @param {THREE.Vector3} options.position - 位置
    * @returns {CSS2DObject | CSS3DObject} 标注实例
    */
-  createLabel(
-    type: '2d' | '3d' | 'sprite',
-    dom: HTMLElement,
-    baseObject?: BaseObject
-  ) {
+  createLabel(options: {
+    type: '2d' | '3d' | 'sprite'
+    dom: HTMLElement
+    position?: number[]
+  }) {
+    const { type, dom, position } = options
     let object
+    const el = dom
+    el.style.pointerEvents = 'none'
     switch (type) {
       case '2d':
         object = new CSS2DObject(dom)
         break
       case '3d':
         object = new CSS3DObject(dom)
+        object.scale.set(0.05, 0.05, 0.05)
+        el.style.backfaceVisibility = 'hidden'
         break
       case 'sprite':
         object = new CSS3DSprite(dom)
+        object.scale.set(0.05, 0.05, 0.05)
         break
       default:
         throw new Error('type should be 2d or 3d or sprite')
     }
-    const el = dom
-    el.style.pointerEvents = 'none'
-    el.style.backfaceVisibility = 'hidden'
-    if (baseObject) {
-      baseObject.origin.add(object)
-    } else {
-      this.scene.add(object)
+
+    if (position) {
+      object.position.set(position[0], position[1], position[2])
     }
+    this.scene.add(object)
     return object
   }
 

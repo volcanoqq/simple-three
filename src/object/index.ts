@@ -370,4 +370,24 @@ export class BaseObject extends EventDispatcher {
   set pickable(value: boolean) {
     this.origin.userData.pickable = value
   }
+
+  get localPosition(): number[] {
+    const { x, y, z } = this.origin.position
+    return [x, y, z]
+  }
+
+  set localPosition(value: number[]) {
+    this.origin.position.set(value[0], value[1], value[2])
+  }
+
+  get worldPosition(): number[] {
+    const { x, y, z } = this.origin.getWorldPosition(new Vector3())
+    return [x, y, z]
+  }
+
+  set worldPosition(value: number[]) {
+    const wPos = new Vector3(value[0], value[1], value[2])
+    const pos = this.origin.worldToLocal(wPos)
+    this.origin.position.copy(pos)
+  }
 }
