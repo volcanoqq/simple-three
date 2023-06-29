@@ -57,7 +57,7 @@ export class EventDispatcher {
         array[i].call(this, event)
       }
 
-      //   event.target = null
+      event.target = null
     }
   }
 }
