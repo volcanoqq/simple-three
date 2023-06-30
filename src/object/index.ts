@@ -93,18 +93,18 @@ export class BaseObject extends EventDispatcher {
   /**
    *
    * @description 物体根据路径进行运动
-   * @param {Object} options - movePath传入配置参数
+   * @param {object} options - movePath传入配置参数
    * @param {number[][]} options.path - 路径,必选
-   * @param {boolean} options.closed - 路径是否闭合,默认为false
-   * @param {boolean} options.loop - 是否循环运动,默认为false
-   * @param {CurveType} options.type - 线段类型,centripetal、chordal和catmullrom。默认为catmullrom
-   * @param {boolean} options.forward - 物体的方向是否为运动的方向,默认为true
-   * @param {number} options.time - 时间,默认为2000
-   * @param {callback} options.start - 开始的回调函数
-   * @param {callback} options.update - 更新的回调函数
-   * @param {callback} options.stop - 停止的回调函数
-   * @param {callback} options.complete - 完成的回调函数
-   * @returns {TWEEN.Tween}
+   * @param {boolean} [options.closed=false] - 路径是否闭合,默认为false
+   * @param {boolean} [options.loop=false] - 是否循环运动,默认为false
+   * @param {CurveType} [options.type=false] - 线段类型,centripetal、chordal和catmullrom。默认为catmullrom
+   * @param {boolean} [options.forward=false] - 物体的方向是否为运动的方向,默认为true
+   * @param {number} [options.time=2000] - 时间,默认为2000
+   * @param {callback=} options.start - 开始的回调函数
+   * @param {callback=} options.update - 更新的回调函数
+   * @param {callback=} options.stop - 停止的回调函数
+   * @param {callback=} options.complete - 完成的回调函数
+   * @returns {TWEEN.Tween<{distance: number}>}
    * @example movePath({ path:[[0,0,0],[1,1,1]], closed:false, time:2000})
    */
   movePath(options: {
@@ -372,12 +372,12 @@ export class BaseObject extends EventDispatcher {
     this.origin.userData.pickable = value
   }
 
-  get localPosition(): number[] {
+  get position(): number[] {
     const { x, y, z } = this.origin.position
     return [x, y, z]
   }
 
-  set localPosition(value: number[]) {
+  set position(value: number[]) {
     this.origin.position.set(value[0], value[1], value[2])
   }
 

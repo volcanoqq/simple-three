@@ -57,8 +57,13 @@ export class Picker {
 
     this.app = app
 
+    this.initListener()
+  }
+
+  initListener() {
     this.renderer.domElement.addEventListener('click', this.pick, false)
     this.renderer.domElement.addEventListener('mousemove', this.pick, false)
+    this.renderer.domElement.addEventListener('dblclick', this.pick, false)
   }
 
   pick = (event: MouseEvent) => {
@@ -140,5 +145,11 @@ export class Picker {
       x: ((event.clientX - rect.left) * canvas.width) / rect.width,
       y: ((event.clientY - rect.top) * canvas.height) / rect.height
     }
+  }
+
+  dispose() {
+    this.renderer.domElement.removeEventListener('click', this.pick, false)
+    this.renderer.domElement.removeEventListener('mousemove', this.pick, false)
+    this.renderer.domElement.removeEventListener('dblclick', this.pick, false)
   }
 }
