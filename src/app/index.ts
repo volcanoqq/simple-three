@@ -150,8 +150,6 @@ export class App {
   }) {
     const { type, dom, position } = options
     let object
-    const el = dom
-    el.style.pointerEvents = 'none'
     switch (type) {
       case '2d':
         object = new CSS2DObject(dom)
@@ -159,7 +157,6 @@ export class App {
       case '3d':
         object = new CSS3DObject(dom)
         object.scale.set(0.05, 0.05, 0.05)
-        el.style.backfaceVisibility = 'hidden'
         break
       case 'sprite':
         object = new CSS3DSprite(dom)
@@ -168,7 +165,9 @@ export class App {
       default:
         throw new Error('type should be 2d or 3d or sprite')
     }
-
+    const el = dom
+    el.style.pointerEvents = 'none'
+    el.style.backfaceVisibility = 'hidden'
     if (position) {
       object.position.set(position[0], position[1], position[2])
     }

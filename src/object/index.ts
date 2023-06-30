@@ -7,7 +7,8 @@ import {
   CurveType,
   Line,
   ColorRepresentation,
-  MathUtils
+  MathUtils,
+  Box3
 } from 'three'
 
 import * as TWEEN from '@tweenjs/tween.js'
@@ -389,5 +390,23 @@ export class BaseObject extends EventDispatcher {
     const wPos = new Vector3(value[0], value[1], value[2])
     const pos = this.origin.worldToLocal(wPos)
     this.origin.position.copy(pos)
+  }
+
+  // 返回包围盒的宽度，高度，和深度。
+  get size() {
+    const box = new Box3().setFromObject(this.origin)
+    const size = new Vector3()
+    box.getSize(size)
+    const { x, y, z } = size
+    return [x, y, z]
+  }
+
+  // 返回物体中心点
+  get center() {
+    const box = new Box3().setFromObject(this.origin)
+    const center = new Vector3()
+    box.getCenter(center)
+    const { x, y, z } = center
+    return [x, y, z]
   }
 }
