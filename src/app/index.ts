@@ -141,13 +141,13 @@ export class App {
    * @param {'2d' | '3d' | 'sprite'} options.type - 类型
    * @param {HTMLElement} options.dom - dom元素
    * @param {THREE.Vector3} options.position - 位置
-   * @returns {CSS2DObject | CSS3DObject} 标注实例
+   * @returns {BaseObject} 标注实例
    */
   createLabel(options: {
     type: '2d' | '3d' | 'sprite'
     dom: HTMLElement
     position?: number[]
-  }) {
+  }): BaseObject {
     const { type, dom, position } = options
     let object
     switch (type) {
@@ -172,7 +172,7 @@ export class App {
       object.position.set(position[0], position[1], position[2])
     }
     this.scene.add(object)
-    return object
+    return this.createBaseObeject(object)
   }
 
   /**
@@ -180,7 +180,7 @@ export class App {
    * @param {THREE.Object3D} object - Object3D
    * @returns {BaseObject} BaseObeject实例
    */
-  createBaseObeject(object: THREE.Object3D) {
+  createBaseObeject(object: THREE.Object3D): BaseObject {
     let baseObject: BaseObject
     // 判断缓存中是否存在
     if (this.cacheBaseObject.has(object.uuid)) {
@@ -197,7 +197,7 @@ export class App {
    * @param {string} name - 名称
    * @returns {BaseObject[]} BaseObject数组
    */
-  query(name: string) {
+  query(name: string): BaseObject[] {
     const objects: BaseObject[] = []
     this.getObjectsByProperty('name', name).forEach((item) => {
       objects.push(this.createBaseObeject(item))

@@ -143,6 +143,7 @@ export class BaseObject extends EventDispatcher {
     const material = new LineBasicMaterial({ color: 0xff0000 })
 
     const curveObject = new Line(geometry, material) // 路径曲线
+    curveObject.position.setY(0.01)
     this.app.scene.add(curveObject)
 
     const totalLength = curve.getLength() // 获取路径的总长度
