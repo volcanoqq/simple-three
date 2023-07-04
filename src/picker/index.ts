@@ -4,8 +4,7 @@ import {
   Vector3,
   Scene,
   WebGLRenderer,
-  Object3D,
-  Camera
+  Object3D
 } from 'three'
 
 import { BaseObject } from '../object'
@@ -28,8 +27,6 @@ type Mode = PICKER_MODE.GPU | PICKER_MODE.RAYCAST
 export class Picker {
   scene: Scene
 
-  viewportCamera: Camera
-
   renderer: WebGLRenderer
 
   app: App
@@ -50,8 +47,6 @@ export class Picker {
 
   constructor(app: App) {
     this.scene = app.scene
-
-    this.viewportCamera = app.camera.viewportCamera
 
     this.renderer = app.renderer
 

@@ -95,6 +95,7 @@ export class CameraController {
       this.camera2D.top = top
       this.camera2D.bottom = bottom
       this.camera2D.zoom = 1
+      this.camera2D.position.set(0, distance, 0)
 
       this.viewportCamera = this.camera2D
 
