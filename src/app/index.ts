@@ -46,6 +46,8 @@ export class App {
 
   composer: EffectComposer
 
+  renderPass: RenderPass
+
   cacheBaseObject: Map<string, BaseObject> = new Map()
 
   constructor(config: Config, inited?: Inited) {
@@ -60,7 +62,7 @@ export class App {
     this.css2DRenderer = new CSS2DRenderer()
     this.css3DRenderer = new CSS3DRenderer()
     this.initRenderer(dom)
-    this.camera = new CameraController(this.renderer)
+    this.camera = new CameraController(this)
 
     if (background !== undefined) {
       this.scene.background = new THREE.Color(background)
@@ -80,8 +82,9 @@ export class App {
     this.scene.add(ambient)
 
     this.composer = new EffectComposer(this.renderer)
-    const renderPass = new RenderPass(this.scene, this.camera.viewportCamera)
-    this.composer.addPass(renderPass)
+    this.renderPass = new RenderPass(this.scene, this.camera.viewportCamera)
+
+    this.composer.addPass(this.renderPass)
 
     // 后处理 颜色异常(伽马校正)
     const gammaPass = new ShaderPass(GammaCorrectionShader)
@@ -237,12 +240,12 @@ export class App {
 
   render() {
     this.camera.controls.update()
-
     this.css2DRenderer.render(this.scene, this.camera.viewportCamera)
     this.css3DRenderer.render(this.scene, this.camera.viewportCamera)
-    this.renderer.render(this.scene, this.camera.viewportCamera)
 
-    this.composer.render()
+    // this.renderer.render(this.scene, this.camera.viewportCamera)
+    this.composer.render() // 内部renderer.render
+
     requestAnimationFrame(this.render.bind(this))
   }
 }

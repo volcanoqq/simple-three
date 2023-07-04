@@ -121,7 +121,7 @@ export class Picker {
   }
 
   #pickRaycast = () => {
-    this.#raycaster.setFromCamera(this.mouse, this.viewportCamera)
+    this.#raycaster.setFromCamera(this.mouse, this.app.camera.viewportCamera)
     const intersectedObjects = this.#raycaster.intersectObjects(
       this.scene.children
     )

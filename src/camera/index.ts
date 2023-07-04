@@ -8,6 +8,7 @@ import {
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as TWEEN from '@tweenjs/tween.js'
 import { BaseObject } from '../object'
+import { App } from '..'
 
 export enum CAMERA_MODE {
   CAMERA_2D = '2D',
@@ -44,9 +45,11 @@ export class CameraController {
 
   controls: OrbitControls
 
-  constructor(renderer: THREE.WebGLRenderer) {
-    const width = renderer.domElement.offsetWidth
-    const height = renderer.domElement.offsetHeight
+  app: App
+
+  constructor(app: App) {
+    const width = app.renderer.domElement.offsetWidth
+    const height = app.renderer.domElement.offsetHeight
     const aspect = width / height
 
     this.camera2D = new OrthographicCamera(
@@ -66,28 +69,57 @@ export class CameraController {
     this.camera3D.lookAt(0, 0, 0)
 
     this.viewportCamera = this.camera3D
-    this.controls = new OrbitControls(this.viewportCamera, renderer.domElement)
+    this.controls = new OrbitControls(
+      this.viewportCamera,
+      app.renderer.domElement
+    )
     this.controls.enableDamping = true
     this.controls.maxPolarAngle = MathUtils.degToRad(89)
     this.controls.screenSpacePanning = false
     this.controls.update()
+
+    this.app = app
   }
 
-  changeMode() {
-    const { CAMERA_2D, CAMERA_3D } = CAMERA_MODE
-    this.cameraMode = this.cameraMode === CAMERA_2D ? CAMERA_3D : CAMERA_2D
+  changeMode(mode: CAMERA_MODE.CAMERA_2D | CAMERA_MODE.CAMERA_3D) {
+    if (mode === CAMERA_MODE.CAMERA_2D) {
+      if (this.viewportCamera === this.camera2D) return
+      const distance = this.camera3D.position.distanceTo(this.controls.target)
+      const top =
+        distance * Math.atan(((Math.PI / 180) * this.camera3D.fov) / 2)
+      const right = top * this.camera3D.aspect
+      const bottom = -top
+      const left = -right
+      this.camera2D.left = left
+      this.camera2D.right = right
+      this.camera2D.top = top
+      this.camera2D.bottom = bottom
+      this.camera2D.zoom = 1
 
-    if (this.cameraMode === CAMERA_2D) {
       this.viewportCamera = this.camera2D
 
       this.controls.object = this.camera2D
       this.controls.enableRotate = false
-    } else {
+    } else if (mode === CAMERA_MODE.CAMERA_3D) {
+      if (this.viewportCamera === this.camera3D) return
       this.viewportCamera = this.camera3D
       this.controls.object = this.camera3D
       this.controls.enableRotate = true
+    } else {
+      throw new Error(
+        `mode must be ${CAMERA_MODE.CAMERA_2D} or ${CAMERA_MODE.CAMERA_3D}`
+      )
     }
-
+    this.cameraMode = mode
+    this.app.renderPass.camera = this.app.camera.viewportCamera
+    this.app.cacheBaseObject.forEach((v) => {
+      const cache = v
+      cache.outlineManager.outlinePass.renderCamera =
+        this.app.camera.viewportCamera
+    })
+    ;(
+      this.viewportCamera as PerspectiveCamera | OrthographicCamera
+    ).updateProjectionMatrix()
     this.viewportCamera.lookAt(this.controls.target)
   }
 
