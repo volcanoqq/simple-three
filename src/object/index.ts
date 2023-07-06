@@ -29,8 +29,6 @@ export class BaseObject extends EventDispatcher {
 
   outlineManager: OutlineManager
 
-  update: () => void
-
   constructor(model: Object3D, app: App) {
     super()
 
@@ -47,12 +45,6 @@ export class BaseObject extends EventDispatcher {
     this.app = app
 
     this.initUserData() // 初始化this.origin.userData
-
-    this.update = () => {
-      TWEEN.update()
-      requestAnimationFrame(this.update)
-    }
-    this.update()
   }
 
   private initUserData() {

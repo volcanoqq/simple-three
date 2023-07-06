@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import * as TWEEN from '@tweenjs/tween.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {
   CSS2DRenderer,
@@ -242,7 +243,7 @@ export class App {
     this.camera.controls.update()
     this.css2DRenderer.render(this.scene, this.camera.viewportCamera)
     this.css3DRenderer.render(this.scene, this.camera.viewportCamera)
-
+    TWEEN.update()
     // this.renderer.render(this.scene, this.camera.viewportCamera)
     this.composer.render() // 内部renderer.render
 
