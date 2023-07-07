@@ -243,9 +243,9 @@ export class App {
     this.camera.controls.update()
     this.css2DRenderer.render(this.scene, this.camera.viewportCamera)
     this.css3DRenderer.render(this.scene, this.camera.viewportCamera)
-    TWEEN.update()
     // this.renderer.render(this.scene, this.camera.viewportCamera)
     this.composer.render() // 内部renderer.render
+    TWEEN.update()
 
     requestAnimationFrame(this.render.bind(this))
   }
