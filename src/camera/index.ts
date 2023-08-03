@@ -48,8 +48,7 @@ export class CameraController {
   app: App
 
   constructor(app: App) {
-    const width = app.renderer.domElement.offsetWidth
-    const height = app.renderer.domElement.offsetHeight
+    const { width, height } = app.renderer.domElement.getBoundingClientRect()
     const aspect = width / height
 
     this.camera2D = new OrthographicCamera(

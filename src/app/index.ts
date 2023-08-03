@@ -15,6 +15,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js'
 import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js'
+import Stats from 'three/examples/jsm/libs/stats.module.js'
 
 import { CameraController } from '../camera'
 import { Picker } from '../picker'
@@ -43,13 +44,15 @@ export class App {
 
   css3DRenderer: CSS3DRenderer
 
-  picker: Picker
+  // picker: Picker
 
   composer: EffectComposer
 
   renderPass: RenderPass
 
   cacheBaseObject: Map<string, BaseObject> = new Map()
+
+  stats: Stats
 
   constructor(config: Config, inited?: Inited) {
     const { dom, url, background } = config
@@ -58,7 +61,10 @@ export class App {
     this.dom = dom
     this.loader = new GLTFLoader()
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true })
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      logarithmicDepthBuffer: true
+    })
 
     this.css2DRenderer = new CSS2DRenderer()
     this.css3DRenderer = new CSS3DRenderer()
@@ -99,16 +105,21 @@ export class App {
     )
     this.composer.addPass(effectSMAA)
 
-    this.picker = new Picker(this)
+    // this.picker = new Picker(this)
 
     // this.cacheBaseObject = new Map()
+
+    this.stats = new Stats()
+    document.body.appendChild(this.stats.dom)
+    this.stats.dom.style.position = 'absolute'
+    this.stats.dom.style.top = '0px' // 显示在屏幕左上角的地方。
+    this.stats.dom.style.display = 'none'
 
     this.render()
   }
 
   initRenderer(dom: HTMLElement) {
-    const width = dom.offsetWidth
-    const height = dom.offsetHeight
+    const { width, height } = dom.getBoundingClientRect()
 
     const top = `${dom.offsetTop}px`
     const left = `${dom.offsetLeft}px`
@@ -225,8 +236,7 @@ export class App {
   }
 
   onWindowResize() {
-    const width = this.dom.offsetWidth
-    const height = this.dom.offsetHeight
+    const { width, height } = this.dom.getBoundingClientRect()
 
     const aspect = width / height
 
@@ -246,6 +256,7 @@ export class App {
     // this.renderer.render(this.scene, this.camera.viewportCamera)
     this.composer.render() // 内部renderer.render
     TWEEN.update()
+    this.stats.update()
 
     requestAnimationFrame(this.render.bind(this))
   }
