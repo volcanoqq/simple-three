@@ -51,6 +51,7 @@ export class Picker {
     this.renderer = app.renderer
 
     this.app = app
+    this.#raycaster.firstHitOnly = true
 
     this.initListener()
   }
@@ -108,7 +109,9 @@ export class Picker {
     this.pickBaseObject = object // 缓存更新
 
     // 处理callback
-    this.pickedResultFunc?.(this.pickBaseObject)
+    if (this.pickedResultFunc) {
+      this.pickedResultFunc(this.pickBaseObject)
+    }
   }
 
   #pickGPU = () => {

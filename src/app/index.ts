@@ -2,6 +2,11 @@ import * as THREE from 'three'
 import * as TWEEN from '@tweenjs/tween.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {
+  computeBoundsTree,
+  disposeBoundsTree,
+  acceleratedRaycast
+} from 'three-mesh-bvh'
+import {
   CSS2DRenderer,
   CSS2DObject
 } from 'three/examples/jsm/renderers/CSS2DRenderer.js'
@@ -44,7 +49,7 @@ export class App {
 
   css3DRenderer: CSS3DRenderer
 
-  // picker: Picker
+  picker: Picker
 
   composer: EffectComposer
 
@@ -55,16 +60,16 @@ export class App {
   stats: Stats
 
   constructor(config: Config, inited?: Inited) {
+    THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree
+    THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree
+    THREE.Mesh.prototype.raycast = acceleratedRaycast
     const { dom, url, background } = config
 
     this.scene = new THREE.Scene()
     this.dom = dom
     this.loader = new GLTFLoader()
 
-    this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
-      logarithmicDepthBuffer: true
-    })
+    this.renderer = new THREE.WebGLRenderer({ antialias: false })
 
     this.css2DRenderer = new CSS2DRenderer()
     this.css3DRenderer = new CSS3DRenderer()
@@ -77,6 +82,12 @@ export class App {
     this.loader.load(url, (gltf) => {
       console.log(gltf.scene)
       this.scene.add(gltf.scene)
+      this.scene.traverse((object) => {
+        if (object.type === 'Mesh') {
+          const meshGeom = (object as THREE.Mesh).geometry
+          meshGeom.computeBoundsTree()
+        }
+      })
       inited?.()
     })
 
@@ -84,9 +95,13 @@ export class App {
 
     console.log('场景初始化完毕！')
 
-    const ambient = new THREE.AmbientLight(0xffffff, 2.5) // AmbientLight,影响整个场景的光源
+    const ambient = new THREE.AmbientLight(0xffffff, 0.1) // AmbientLight,影响整个场景的光源
     ambient.name = '环境光'
     this.scene.add(ambient)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1)
+    directionalLight.name = '平行光'
+    directionalLight.position.set(100, 60, 50)
+    this.scene.add(directionalLight)
 
     this.composer = new EffectComposer(this.renderer)
     this.renderPass = new RenderPass(this.scene, this.camera.viewportCamera)
@@ -105,7 +120,7 @@ export class App {
     )
     this.composer.addPass(effectSMAA)
 
-    // this.picker = new Picker(this)
+    this.picker = new Picker(this)
 
     // this.cacheBaseObject = new Map()
 
@@ -126,7 +141,9 @@ export class App {
 
     this.renderer.setPixelRatio(window.devicePixelRatio)
     this.renderer.setSize(width, height)
-    this.renderer.shadowMap.enabled = true
+    // 取消自动清除上一次渲染的场景
+    this.renderer.autoClear = false
+
     dom.appendChild(this.renderer.domElement)
 
     this.css2DRenderer.setSize(width, height)
@@ -250,6 +267,8 @@ export class App {
   }
 
   render() {
+    // 每次调用render()函数的时候，把上次调用render()执行两次.render()叠加的帧缓冲区数据清除
+    this.renderer.clear()
     this.camera.controls.update()
     this.css2DRenderer.render(this.scene, this.camera.viewportCamera)
     this.css3DRenderer.render(this.scene, this.camera.viewportCamera)
