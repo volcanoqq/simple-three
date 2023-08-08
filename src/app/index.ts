@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import * as TWEEN from '@tweenjs/tween.js'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { GLTF, GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {
   computeBoundsTree,
   disposeBoundsTree,
@@ -32,8 +32,10 @@ interface Config {
   background?: string | number
 }
 
-type Inited = () => void
+type Inited = (gltf: GLTF) => void
+type PorgressEvent = (event: ProgressEvent) => void
 
+const clock = new THREE.Clock()
 export class App {
   dom: HTMLElement
 
@@ -57,9 +59,13 @@ export class App {
 
   cacheBaseObject: Map<string, BaseObject> = new Map()
 
+  animations: Map<string, THREE.AnimationClip> = new Map()
+
+  mixers: THREE.AnimationMixer[] = []
+
   stats: Stats
 
-  constructor(config: Config, inited?: Inited) {
+  constructor(config: Config, inited?: Inited, onPorgress?: PorgressEvent) {
     THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree
     THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree
     THREE.Mesh.prototype.raycast = acceleratedRaycast
@@ -69,7 +75,9 @@ export class App {
     this.dom = dom
     this.loader = new GLTFLoader()
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: false })
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: false
+    })
 
     this.css2DRenderer = new CSS2DRenderer()
     this.css3DRenderer = new CSS3DRenderer()
@@ -79,17 +87,31 @@ export class App {
     if (background !== undefined) {
       this.scene.background = new THREE.Color(background)
     }
-    this.loader.load(url, (gltf) => {
-      console.log(gltf.scene)
-      this.scene.add(gltf.scene)
-      this.scene.traverse((object) => {
-        if (object.type === 'Mesh') {
-          const meshGeom = (object as THREE.Mesh).geometry
-          meshGeom.computeBoundsTree()
-        }
-      })
-      inited?.()
-    })
+    this.loader.load(
+      url,
+      (gltf) => {
+        console.log(gltf)
+        // eslint-disable-next-line no-param-reassign
+        gltf.animations[0].name = 'Sketchfab_Scene'
+        gltf.animations.forEach((item) => {
+          this.animations.set(item.name, item)
+        })
+        console.log(this.animations)
+        // requestAnimationFrame(mixer.update)
+        console.log(gltf.scene)
+        this.scene.add(gltf.scene)
+        this.scene.traverse((object) => {
+          if (object.type === 'Mesh') {
+            const { geometry } = object as THREE.Mesh
+            geometry.computeBoundsTree()
+          }
+        })
+        inited?.(gltf)
+      },
+      (e: ProgressEvent) => {
+        onPorgress?.(e)
+      }
+    )
 
     window.addEventListener('resize', this.onWindowResize.bind(this), false)
 
@@ -276,7 +298,9 @@ export class App {
     this.composer.render() // 内部renderer.render
     TWEEN.update()
     this.stats.update()
-
+    this.mixers.forEach((mixer) => {
+      mixer.update(clock.getDelta())
+    })
     requestAnimationFrame(this.render.bind(this))
   }
 }

@@ -14,6 +14,7 @@ import {
 import * as TWEEN from '@tweenjs/tween.js'
 import { App } from '..'
 import { OutlineManager } from './outlineManager'
+import { AnimationsManager } from './AnimationsManager'
 import { EventDispatcher } from '../utils/EventDispatcher'
 
 interface BaseStyle {
@@ -29,6 +30,8 @@ export class BaseObject extends EventDispatcher {
 
   outlineManager: OutlineManager
 
+  AnimationsManager: AnimationsManager
+
   constructor(model: Object3D, app: App) {
     super()
 
@@ -43,6 +46,8 @@ export class BaseObject extends EventDispatcher {
     app.composer.addPass(this.outlineManager.outlinePass)
 
     this.app = app
+
+    this.AnimationsManager = new AnimationsManager(app, this.origin)
 
     this.initUserData() // 初始化this.origin.userData
   }
@@ -401,5 +406,13 @@ export class BaseObject extends EventDispatcher {
     box.getCenter(center)
     const { x, y, z } = center
     return [x, y, z]
+  }
+
+  play() {
+    this.AnimationsManager.play()
+  }
+
+  stop() {
+    this.AnimationsManager.stop()
   }
 }
