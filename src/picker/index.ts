@@ -8,7 +8,8 @@ import {
 } from 'three'
 
 import { BaseObject } from '../object'
-import { App } from '..'
+import { App } from '../app'
+import { throttle } from '../utils/throttle'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getObjectRecursion(object: any): any {
@@ -58,7 +59,11 @@ export class Picker {
 
   initListener() {
     this.renderer.domElement.addEventListener('click', this.pick, false)
-    this.renderer.domElement.addEventListener('mousemove', this.pick, false)
+    this.renderer.domElement.addEventListener(
+      'mousemove',
+      throttle(this.pick, 150),
+      false
+    )
     this.renderer.domElement.addEventListener('dblclick', this.pick, false)
   }
 
