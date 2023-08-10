@@ -91,11 +91,13 @@ export class App {
       url,
       (gltf) => {
         console.log(gltf)
-        // eslint-disable-next-line no-param-reassign
-        gltf.animations[0].name = 'Sketchfab_Scene'
-        gltf.animations.forEach((item) => {
-          this.animations.set(item.name, item)
-        })
+        if (gltf.animations.length) {
+          // eslint-disable-next-line no-param-reassign
+          gltf.animations[0].name = 'Sketchfab_Scene'
+          gltf.animations.forEach((item) => {
+            this.animations.set(item.name, item)
+          })
+        }
         console.log(this.animations)
         // requestAnimationFrame(mixer.update)
         console.log(gltf.scene)
