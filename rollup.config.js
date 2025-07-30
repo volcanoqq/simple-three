@@ -1,10 +1,11 @@
-import typescript from '@rollup/plugin-typescript'
-import resolve from '@rollup/plugin-node-resolve'
-import alias from '@rollup/plugin-alias'
+const typescript = require('@rollup/plugin-typescript')
+const resolve = require('@rollup/plugin-node-resolve')
+const alias = require('@rollup/plugin-alias')
+const path = require('path')
 
-import path from 'path'
+const dirnameNew = path.dirname(__dirname)
 
-export default {
+module.exports = {
   input: 'src/index.ts',
   output: [
     {
@@ -25,7 +26,7 @@ export default {
       resolve: ['.js', 'ts'],
       entries: {
         find: '@',
-        replacement: path.resolve(path.dirname(__dirname), 'src')
+        replacement: path.resolve(dirnameNew, 'src')
       }
     }),
     resolve()
